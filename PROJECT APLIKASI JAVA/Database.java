@@ -42,13 +42,7 @@ public class Database {
                     + "password VARCHAR(255) NOT NULL"
                     + ")");
 
-            // Drop table lama jika ada dan recreate dengan schema baru
-            try {
-                st.executeUpdate("DROP TABLE IF EXISTS transactions");
-            } catch (SQLException ignored) {
-            }
-            
-            st.executeUpdate("CREATE TABLE transactions ("
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS transactions ("
                     + "id INT AUTO_INCREMENT PRIMARY KEY, "
                     + "username VARCHAR(100) NOT NULL, "
                     + "description VARCHAR(255) NOT NULL, "
@@ -56,6 +50,7 @@ public class Database {
                     + "amount BIGINT NOT NULL, "
                     + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
                     + ")");
+            ensureCreatedAtColumn(conn);
 
             if (!userExists(conn, "admin")) {
                 try (PreparedStatement ps = conn.prepareStatement("INSERT INTO users (username, password) VALUES (?, ?)")) {
@@ -97,6 +92,20 @@ public class Database {
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
+        }
+    }
+
+    private static void ensureCreatedAtColumn(Connection conn) {
+        try {
+            ResultSet rs = conn.getMetaData().getColumns(null, null, "transactions", "created_at");
+            if (!rs.next()) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "ALTER TABLE transactions ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")) {
+                    ps.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Gagal memastikan kolom created_at: " + e.getMessage());
         }
     }
 
@@ -190,18 +199,45 @@ public class Database {
             return transactions;
         }
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT description, type, amount FROM transactions WHERE username = ? ORDER BY created_at ASC")) {
+             PreparedStatement ps = conn.prepareStatement("SELECT description, type, amount, created_at FROM transactions WHERE username = ? ORDER BY created_at ASC")) {
             ps.setString(1, currentUsername);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String description = rs.getString("description");
                     String type = rs.getString("type");
                     long amount = rs.getLong("amount");
-                    transactions.add(new Transaction(description, type, amount));
+                    Timestamp createdAt = rs.getTimestamp("created_at");
+                    transactions.add(new Transaction(description, type, amount, createdAt));
                 }
             }
         } catch (SQLException e) {
             System.err.println("Error membaca transaksi: " + e.getMessage());
+        }
+        return transactions;
+    }
+
+    public static List<Transaction> getTransactionsBetween(Timestamp start, Timestamp end) {
+        List<Transaction> transactions = new ArrayList<>();
+        if (currentUsername == null) {
+            return transactions;
+        }
+        String sql = "SELECT description, type, amount, created_at FROM transactions WHERE username = ? AND created_at >= ? AND created_at < ? ORDER BY created_at ASC";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, currentUsername);
+            ps.setTimestamp(2, start);
+            ps.setTimestamp(3, end);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String description = rs.getString("description");
+                    String type = rs.getString("type");
+                    long amount = rs.getLong("amount");
+                    Timestamp createdAt = rs.getTimestamp("created_at");
+                    transactions.add(new Transaction(description, type, amount, createdAt));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error membaca transaksi antara tanggal: " + e.getMessage());
         }
         return transactions;
     }
@@ -251,11 +287,13 @@ public class Database {
         public final String description;
         public final String type;
         public final long amount;
+        public final Timestamp createdAt;
 
-        public Transaction(String description, String type, long amount) {
+        public Transaction(String description, String type, long amount, Timestamp createdAt) {
             this.description = description;
             this.type = type;
             this.amount = amount;
+            this.createdAt = createdAt;
         }
     }
 
