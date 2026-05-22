@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class DashboardFrame extends JFrame {
     private JLabel lblWelcome, lblTotalSaldo, lblTotalPemasukan, lblTotalPengeluaran;
-    private JButton btnTambahTransaksi, btnLihatRiwayat, btnLogout;
+    private JButton btnTambahTransaksi, btnLihatRiwayat, btnLihatUsers, btnLogout;
     private PieChartPanel chartPanel;
 
     public DashboardFrame() {
@@ -97,6 +97,19 @@ public class DashboardFrame extends JFrame {
         });
         panelTombol.add(btnRefresh);
 
+        btnLihatUsers = new JButton("Lihat Pengguna");
+        btnLihatUsers.setBackground(new Color(52, 152, 219));
+        btnLihatUsers.setForeground(Color.WHITE);
+        btnLihatUsers.setFont(new Font("Arial", Font.BOLD, 14));
+        btnLihatUsers.setFocusPainted(false);
+        btnLihatUsers.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showUsers();
+            }
+        });
+        panelTombol.add(btnLihatUsers);
+
         JButton btnReset = new JButton("Reset Saldo");
         btnReset.setBackground(new Color(231, 76, 60));
         btnReset.setForeground(Color.WHITE);
@@ -149,6 +162,14 @@ public class DashboardFrame extends JFrame {
 
         // Update ringkasan (simulasi)
         updateRingkasan();
+    }
+
+    private void showUsers() {
+        SwingUtilities.invokeLater(() -> {
+            UsersFrame usersFrame = new UsersFrame();
+            usersFrame.setLocationRelativeTo(this);
+            usersFrame.setVisible(true);
+        });
     }
 
     private void showRiwayat() {
@@ -279,18 +300,6 @@ public class DashboardFrame extends JFrame {
             int inset = size / 3;
             g2.setColor(Color.WHITE);
             g2.fillOval(x + inset, y + inset, size - inset * 2, size - inset * 2);
-
-            g2.setColor(Color.DARK_GRAY);
-            g2.setFont(new Font("Arial", Font.BOLD, 16));
-            String centerText = "Total";
-            FontMetrics fm = g2.getFontMetrics();
-            int centerTextWidth = fm.stringWidth(centerText);
-            g2.drawString(centerText, x + (size - centerTextWidth) / 2, y + size / 2 - 8);
-
-            g2.setFont(new Font("Arial", Font.BOLD, 14));
-            String valueText = formatRupiah(total);
-            int valueTextWidth = g2.getFontMetrics().stringWidth(valueText);
-            g2.drawString(valueText, x + (size - valueTextWidth) / 2, y + size / 2 + 18);
 
             int legendX = 30;
             int legendY = y + size + 20;

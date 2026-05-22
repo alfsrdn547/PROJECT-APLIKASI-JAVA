@@ -100,6 +100,22 @@ public class Database {
         }
     }
 
+    public static java.util.List<User> getAllUsers() {
+        java.util.List<User> users = new java.util.ArrayList<>();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT id, username FROM users ORDER BY id");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String username = rs.getString("username");
+                users.add(new User(id, username));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error membaca daftar pengguna: " + e.getMessage());
+        }
+        return users;
+    }
+
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(DB_URL, USER, PASSWORD);
     }
@@ -240,6 +256,16 @@ public class Database {
             this.description = description;
             this.type = type;
             this.amount = amount;
+        }
+    }
+
+    public static class User {
+        public final int id;
+        public final String username;
+
+        public User(int id, String username) {
+            this.id = id;
+            this.username = username;
         }
     }
 
