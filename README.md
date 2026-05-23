@@ -54,6 +54,16 @@ javac -cp ".;lib/mysql-connector-j-9.6.0.jar" *.java
 java -cp ".;lib/mysql-connector-j-9.6.0.jar" LoginFrame
 ```
 
+### 3. Bangun launcher `.exe`
+
+Jalankan skrip build berikut untuk membuat paket aplikasi Windows yang bisa dijalankan dengan klik:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build-exe.ps1
+```
+
+Launcher akan dihasilkan di `build-exe/output/AplikasiKeuangan/AplikasiKeuangan.exe`.
+
 ## Kredensial Default
 
 - Username: `admin`
