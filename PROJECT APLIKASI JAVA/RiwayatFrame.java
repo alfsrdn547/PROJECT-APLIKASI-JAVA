@@ -1,5 +1,7 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,8 +14,9 @@ import java.time.format.DateTimeFormatter;
 public class RiwayatFrame extends JFrame {
     private JTable tabelRiwayat;
     private DefaultTableModel tableModel;
-    private JLabel lblTotalSaldo;
     private long totalSaldo = 0;
+    private boolean showTotal = true;
+    private JCheckBox cbShowTotal;
 
     public RiwayatFrame() {
         // Pengaturan Window
@@ -40,90 +43,182 @@ public class RiwayatFrame extends JFrame {
                 return false; // Tidak bisa diedit
             }
         };
-        tabelRiwayat = new JTable(tableModel);
+        tabelRiwayat = new JTable(tableModel) {
+            @Override
+            public void changeSelection(int row, int column, boolean toggle, boolean extend) {
+                // Prevent selecting the total row (when shown)
+                if (showTotal && row == getRowCount() - 1) return;
+                super.changeSelection(row, column, toggle, extend);
+            }
+        };
+        tabelRiwayat.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabelRiwayat.setFont(new Font("Arial", Font.PLAIN, 12));
-        tabelRiwayat.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
-        tabelRiwayat.setRowHeight(25);
-        add(new JScrollPane(tabelRiwayat), BorderLayout.CENTER);
+        tabelRiwayat.setRowHeight(28);
+        tabelRiwayat.setShowGrid(false);
+        tabelRiwayat.setIntercellSpacing(new Dimension(0, 0));
+        tabelRiwayat.setSelectionBackground(new Color(229, 242, 255));
+        tabelRiwayat.setSelectionForeground(Color.BLACK);
+
+        JTableHeader header = tabelRiwayat.getTableHeader();
+        header.setBackground(new Color(41, 128, 185));
+        header.setForeground(Color.WHITE);
+        header.setFont(new Font("Arial", Font.BOLD, 13));
+        header.setPreferredSize(new Dimension(header.getPreferredSize().width, 30));
+
+        JScrollPane scrollPane = new JScrollPane(tabelRiwayat);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 220, 220)));
+        add(scrollPane, BorderLayout.CENTER);
+
+        // Adjust column widths and renderers
+        tabelRiwayat.getColumnModel().getColumn(0).setPreferredWidth(360);
+        tabelRiwayat.getColumnModel().getColumn(1).setPreferredWidth(140);
+        tabelRiwayat.getColumnModel().getColumn(2).setPreferredWidth(140);
+
+        // Custom renderers that highlight the total row identified by the first-column marker
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                boolean isTotalRow = false;
+                try {
+                    Object marker = table.getValueAt(row, 0);
+                    isTotalRow = marker != null && "Total Saldo:".equals(marker.toString());
+                } catch (Exception ex) {
+                    isTotalRow = false;
+                }
+                Component c = super.getTableCellRendererComponent(table, value, isSelected && !isTotalRow, hasFocus, row, column);
+                setHorizontalAlignment(SwingConstants.RIGHT);
+                if (isTotalRow) {
+                    c.setFont(c.getFont().deriveFont(Font.BOLD));
+                    c.setBackground(new Color(250, 250, 250));
+                    if (c instanceof JComponent) {
+                        ((JComponent) c).setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(200, 200, 200)));
+                    }
+                } else {
+                    c.setBackground(Color.WHITE);
+                    if (c instanceof JComponent) {
+                        ((JComponent) c).setBorder(null);
+                    }
+                }
+                return c;
+            }
+        };
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                boolean isTotalRow = false;
+                try {
+                    Object marker = table.getValueAt(row, 0);
+                    isTotalRow = marker != null && "Total Saldo:".equals(marker.toString());
+                } catch (Exception ex) {
+                    isTotalRow = false;
+                }
+                Component c = super.getTableCellRendererComponent(table, value, isSelected && !isTotalRow, hasFocus, row, column);
+                setHorizontalAlignment(SwingConstants.CENTER);
+                if (isTotalRow) {
+                    c.setFont(c.getFont().deriveFont(Font.BOLD));
+                    c.setBackground(new Color(250, 250, 250));
+                    if (c instanceof JComponent) {
+                        ((JComponent) c).setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(200, 200, 200)));
+                    }
+                } else {
+                    c.setBackground(Color.WHITE);
+                    if (c instanceof JComponent) {
+                        ((JComponent) c).setBorder(null);
+                    }
+                }
+                return c;
+            }
+        };
+
+        tabelRiwayat.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
+        tabelRiwayat.getColumnModel().getColumn(2).setCellRenderer(rightRenderer);
 
         // --- Panel Status dan Tombol (Bawah) ---
-        JPanel panelBawah = new JPanel(new BorderLayout(10, 10));
+        JPanel panelBawah = new JPanel(new BorderLayout(10, 0));
         panelBawah.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         panelBawah.setBackground(Color.WHITE);
+        panelBawah.add(new JSeparator(SwingConstants.HORIZONTAL), BorderLayout.NORTH);
 
-        // Label Total Saldo
-        lblTotalSaldo = new JLabel("Total Saldo: Rp 0");
-        lblTotalSaldo.setFont(new Font("Arial", Font.BOLD, 16));
-        lblTotalSaldo.setHorizontalAlignment(SwingConstants.LEFT);
-        panelBawah.add(lblTotalSaldo, BorderLayout.WEST);
+        // Checkbox to toggle total row visibility
+        cbShowTotal = new JCheckBox("Tampilkan Total", true);
+        cbShowTotal.setBackground(Color.WHITE);
+        cbShowTotal.setFont(new Font("Arial", Font.PLAIN, 12));
+        cbShowTotal.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showTotal = cbShowTotal.isSelected();
+                loadData();
+            }
+        });
+        panelBawah.add(cbShowTotal, BorderLayout.WEST);
 
         // Panel Tombol
-        JPanel panelTombol = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        JPanel panelTombol = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         panelTombol.setBackground(Color.WHITE);
 
         JButton btnRefresh = new JButton("Refresh");
         btnRefresh.setBackground(new Color(52, 152, 219));
-        btnRefresh.setForeground(Color.WHITE);
-        btnRefresh.setFont(new Font("Arial", Font.BOLD, 12));
-        btnRefresh.setFocusPainted(false);
         btnRefresh.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 refreshData();
             }
         });
+        styleButton(btnRefresh);
         panelTombol.add(btnRefresh);
+
+        JPanel panelExportGroup = new JPanel(new GridLayout(1, 3, 10, 0));
+        panelExportGroup.setBackground(Color.WHITE);
+        panelExportGroup.setOpaque(false);
 
         JButton btnExportMinggu = new JButton("Export Mingguan");
         btnExportMinggu.setBackground(new Color(39, 174, 96));
-        btnExportMinggu.setForeground(Color.WHITE);
-        btnExportMinggu.setFont(new Font("Arial", Font.BOLD, 12));
-        btnExportMinggu.setFocusPainted(false);
         btnExportMinggu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 exportByPeriod("minggu");
             }
         });
-        panelTombol.add(btnExportMinggu);
+        styleButton(btnExportMinggu);
+        btnExportMinggu.setPreferredSize(new Dimension(130, 34));
+        panelExportGroup.add(btnExportMinggu);
 
         JButton btnExportBulan = new JButton("Export Bulanan");
         btnExportBulan.setBackground(new Color(39, 174, 96));
-        btnExportBulan.setForeground(Color.WHITE);
-        btnExportBulan.setFont(new Font("Arial", Font.BOLD, 12));
-        btnExportBulan.setFocusPainted(false);
         btnExportBulan.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 exportByPeriod("bulan");
             }
         });
-        panelTombol.add(btnExportBulan);
+        styleButton(btnExportBulan);
+        btnExportBulan.setPreferredSize(new Dimension(130, 34));
+        panelExportGroup.add(btnExportBulan);
 
         JButton btnExportTahun = new JButton("Export Tahunan");
         btnExportTahun.setBackground(new Color(39, 174, 96));
-        btnExportTahun.setForeground(Color.WHITE);
-        btnExportTahun.setFont(new Font("Arial", Font.BOLD, 12));
-        btnExportTahun.setFocusPainted(false);
         btnExportTahun.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 exportByPeriod("tahun");
             }
         });
-        panelTombol.add(btnExportTahun);
+        styleButton(btnExportTahun);
+        btnExportTahun.setPreferredSize(new Dimension(130, 34));
+        panelExportGroup.add(btnExportTahun);
+
+        panelTombol.add(panelExportGroup);
 
         JButton btnKembali = new JButton("Kembali");
         btnKembali.setBackground(new Color(149, 165, 166));
-        btnKembali.setForeground(Color.WHITE);
-        btnKembali.setFont(new Font("Arial", Font.BOLD, 12));
-        btnKembali.setFocusPainted(false);
         btnKembali.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 dispose();
             }
         });
+        styleButton(btnKembali);
         panelTombol.add(btnKembali);
 
         panelBawah.add(panelTombol, BorderLayout.EAST);
@@ -149,7 +244,11 @@ public class RiwayatFrame extends JFrame {
             }
         }
 
-        updateSaldoLabel();
+        // Tambahkan baris total di bagian paling bawah tabel jika diinginkan
+        if (showTotal) {
+            String totalText = (totalSaldo < 0 ? "- " : "+ ") + formatRupiah(Math.abs(totalSaldo));
+            tableModel.addRow(new Object[] { "Total Saldo:", "", totalText });
+        }
     }
 
     private void refreshData() {
@@ -157,8 +256,13 @@ public class RiwayatFrame extends JFrame {
         JOptionPane.showMessageDialog(this, "Data berhasil diperbarui!", "Refresh", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void updateSaldoLabel() {
-        lblTotalSaldo.setText("Total Saldo: " + formatRupiah(totalSaldo));
+    // total saldo sekarang ditampilkan sebagai baris terakhir pada tabel
+
+    private void styleButton(JButton button) {
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Arial", Font.BOLD, 12));
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(8, 14, 8, 14));
     }
 
     private void exportByPeriod(String period) {

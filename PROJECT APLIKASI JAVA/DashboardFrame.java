@@ -23,7 +23,7 @@ public class DashboardFrame extends JFrame {
         // --- Panel Judul (Atas) ---
         JPanel panelJudul = new JPanel();
         panelJudul.setBackground(new Color(41, 128, 185));
-        lblWelcome = new JLabel("Selamat Datang di Dashboard Keuangan");
+        lblWelcome = new JLabel("Dashboard Keuangan");
         lblWelcome.setForeground(Color.WHITE);
         lblWelcome.setFont(new Font("Arial", Font.BOLD, 24));
         panelJudul.add(lblWelcome);

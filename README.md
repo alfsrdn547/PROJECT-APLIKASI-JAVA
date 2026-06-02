@@ -54,7 +54,24 @@ javac -cp ".;lib/mysql-connector-j-9.6.0.jar" *.java
 java -cp ".;lib/mysql-connector-j-9.6.0.jar" LoginFrame
 ```
 
-### 3. Bangun launcher `.exe`
+### 3. Bangun executable JAR
+
+Gunakan skrip berikut untuk membuat file JAR yang bisa dijalankan dengan `java -jar`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\PROJECT APLIKASI JAVA\build-jar.ps1
+```
+
+Atau:
+
+```cmd
+cd "PROJECT APLIKASI JAVA"
+build-jar.bat
+```
+
+JAR yang dihasilkan akan bernama `AplikasiKeuangan.jar` dan menggunakan `lib/mysql-connector-j-9.6.0.jar` dari folder `lib/`.
+
+### 4. Bangun launcher `.exe`
 
 Jalankan skrip build berikut untuk membuat paket aplikasi Windows yang bisa dijalankan dengan klik:
 
