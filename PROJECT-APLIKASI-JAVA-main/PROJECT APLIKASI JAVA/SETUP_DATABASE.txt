@@ -1,0 +1,63 @@
+====================================
+SETUP DATABASE UNTUK APLIKASI KEUANGAN
+====================================
+
+Aplikasi ini membutuhkan MySQL untuk menyimpan data user dan transaksi.
+
+LANGKAH 1: Verifikasi MySQL sudah running
+=========================================
+Buka Command Prompt dan jalankan:
+  mysql -u root
+
+Jika berhasil, MySQL sudah berjalan dengan benar.
+
+LANGKAH 2: Tentukan Password MySQL
+===================================
+Jika MySQL meminta password, Anda perlu set environment variable MYSQL_PASSWORD:
+
+Untuk Windows PowerShell:
+  $env:MYSQL_PASSWORD = "YOUR_PASSWORD"
+  java -cp "lib/mysql-connector-j-9.6.0.jar;." LoginFrame
+
+Untuk Windows CMD:
+  set MYSQL_PASSWORD=YOUR_PASSWORD
+  java -cp "lib/mysql-connector-j-9.6.0.jar;." LoginFrame
+
+LANGKAH 3: Reset Password MySQL (jika lupa)
+==========================================
+Jika Anda lupa password MySQL root:
+
+1. Stop MySQL service:
+   net stop MySQL80
+
+2. Start MySQL dengan skip-grant-tables:
+   mysqld --skip-grant-tables
+
+3. Connect tanpa password:
+   mysql -u root
+
+4. Reset password:
+   FLUSH PRIVILEGES;
+   ALTER USER 'root'@'localhost' IDENTIFIED BY '';
+   EXIT;
+
+5. Restart MySQL service:
+   net start MySQL80
+
+LANGKAH 4: Test Koneksi
+======================
+Jalankan test koneksi:
+  javac -cp "lib/mysql-connector-j-9.6.0.jar;." TestKoneksi.java
+  java -cp "lib/mysql-connector-j-9.6.0.jar;." TestKoneksi
+
+LANGKAH 5: Jalankan Aplikasi
+============================
+Jika sudah berhasil, jalankan:
+  java -cp "lib/mysql-connector-j-9.6.0.jar;." LoginFrame
+
+Login dengan:
+  Username: admin
+  Password: 123
+
+====================================
+Pertanyaan? Periksa Database.java untuk edit kredensial.

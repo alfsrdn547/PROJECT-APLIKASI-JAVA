@@ -1,0 +1,38 @@
+@echo off
+REM ============================================================
+REM  Template launcher untuk Aplikasi Keuangan.
+REM  Copy file ini ke run.bat, lalu isi MYSQL_PASSWORD dengan
+REM  password MySQL Anda. JANGAN commit run.bat hasil copy —
+REM  file itu di-gitignore karena berisi credential.
+REM ============================================================
+
+setlocal
+cd /d "%~dp0"
+
+REM <-- GANTI DENGAN PASSWORD MYSQL ROOT ANDA -->
+set "MYSQL_PASSWORD=GANTI_DENGAN_PASSWORD_ANDA"
+
+REM Bersihkan .class lama agar tidak bentrok dengan source yang baru
+del /s /q *.class 2>nul
+
+REM Kompilasi ulang seluruh source
+echo [1/2] Mengompilasi source...
+javac -cp "lib\mysql-connector-j-9.6.0.jar" *.java
+if errorlevel 1 (
+    echo.
+    echo KOMPILASI GAGAL. Periksa error di atas.
+    pause
+    exit /b 1
+)
+
+REM Jalankan aplikasi
+echo [2/2] Menjalankan aplikasi...
+echo.
+java -cp ".;lib\mysql-connector-j-9.6.0.jar" LoginFrame
+
+if errorlevel 1 (
+    echo.
+    echo Aplikasi berhenti dengan kode error %errorlevel%.
+)
+pause
+endlocal

@@ -1,0 +1,25 @@
+# Build output
+*.class
+classes/
+build-exe/output/
+*.jar
+manifest.mf
+
+# Local config — berisi password / kredensial
+run.bat
+run-jar.bat
+
+# IDE
+.vscode/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Claude Code internal memory (bukan bagian dari project)
+.claude/

@@ -1,0 +1,3 @@
+gaji,Pemasukan,12000
+gaji,Pemasukan,12000
+tagihan,Pengeluaran,12000
