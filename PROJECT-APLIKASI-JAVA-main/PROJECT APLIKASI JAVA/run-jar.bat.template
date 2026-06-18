@@ -1,0 +1,23 @@
+@echo off
+REM ============================================================
+REM  Template launcher untuk AplikasiKeuangan.jar.
+REM  Copy file ini ke run-jar.bat, lalu isi MYSQL_PASSWORD.
+REM  JANGAN commit run-jar.bat hasil copy.
+REM ============================================================
+
+setlocal
+cd /d "%~dp0"
+
+REM <-- GANTI DENGAN PASSWORD MYSQL ROOT ANDA -->
+set "MYSQL_PASSWORD=GANTI_DENGAN_PASSWORD_ANDA"
+
+if not exist AplikasiKeuangan.jar (
+    echo AplikasiKeuangan.jar tidak ditemukan.
+    echo Jalankan build-jar.bat terlebih dahulu untuk membangun JAR.
+    pause
+    exit /b 1
+)
+
+java -jar AplikasiKeuangan.jar
+pause
+endlocal
