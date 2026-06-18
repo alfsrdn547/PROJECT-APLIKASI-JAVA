@@ -1,0 +1,14 @@
+{
+    "java.project.referencedLibraries": {
+        "include": [
+            "lib/**/*.jar",
+            "PROJECT APLIKASI JAVA/lib/mysql-connector-j-9.6.0.jar",
+            "PROJECT APLIKASI JAVA/lib/flatlaf-3.5.4.jar",
+            "c:\\Users\\user\\Desktop\\PROJECT-APLIKASI-JAVA-main\\jfreechart-1.0.19\\jfreechart-1.0.19-demo.jar"
+        ],
+        "exclude": [
+            "PROJECT APLIKASI JAVA/lib/flatlaf-extras-3.5.4.jar",
+            "c:\\Users\\user\\Downloads\\flatlaf-extras-3.5.4.jar"
+        ]
+    }
+}
