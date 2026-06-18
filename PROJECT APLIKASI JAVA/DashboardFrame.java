@@ -1,0 +1,354 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class DashboardFrame extends JFrame {
+    private JLabel lblWelcome, lblTotalSaldo, lblTotalPemasukan, lblTotalPengeluaran;
+    private JButton btnTambahTransaksi, btnLihatRiwayat, btnLihatUsers, btnLogout;
+    private PieChartPanel chartPanel;
+
+    public DashboardFrame() {
+        // Pengaturan Window
+        setTitle("Dashboard - Manajer Keuangan");
+        setSize(800, 600);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout(20, 20));
+
+        // --- Panel Judul (Atas) ---
+        JPanel panelJudul = new JPanel();
+        panelJudul.setBackground(new Color(41, 128, 185));
+        lblWelcome = new JLabel("Dashboard Keuangan");
+        lblWelcome.setForeground(Color.WHITE);
+        lblWelcome.setFont(new Font("Arial", Font.BOLD, 24));
+        panelJudul.add(lblWelcome);
+        add(panelJudul, BorderLayout.NORTH);
+
+        // --- Panel Ringkasan (Tengah) ---
+        JPanel panelRingkasan = new JPanel(new BorderLayout(10, 10));
+        panelRingkasan.setBorder(BorderFactory.createTitledBorder("Ringkasan Keuangan"));
+        panelRingkasan.setBackground(Color.WHITE);
+
+        chartPanel = new PieChartPanel();
+        chartPanel.setPreferredSize(new Dimension(450, 350));
+        panelRingkasan.add(chartPanel, BorderLayout.CENTER);
+
+        JPanel panelLabelRingkasan = new JPanel(new GridLayout(1, 3, 10, 10)); 
+        panelLabelRingkasan.setBackground(new Color(245, 246, 250));
+
+        lblTotalSaldo = new JLabel("Total Saldo: Rp 0");
+        lblTotalSaldo.setFont(new Font("PLAIN", Font.BOLD, 16));
+        lblTotalSaldo.setHorizontalAlignment(SwingConstants.CENTER);
+        panelLabelRingkasan.add(createCard("Total Saldo", lblTotalSaldo, new Color(41, 128, 185)));
+
+        lblTotalPemasukan = new JLabel("Total Pemasukan: Rp 0");
+        lblTotalPemasukan.setFont(new Font("PLAIN", Font.BOLD, 16));
+        lblTotalPemasukan.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTotalPemasukan.setForeground(new Color(39, 174, 96));
+        panelLabelRingkasan.add(createCard("Pemasukan", lblTotalPemasukan, new Color(39, 174, 96)));
+
+        lblTotalPengeluaran = new JLabel("Total Pengeluaran: Rp 0");
+        lblTotalPengeluaran.setFont(new Font("PLAIN", Font.BOLD, 16));
+        lblTotalPengeluaran.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTotalPengeluaran.setForeground(new Color(192, 41, 43));
+        panelLabelRingkasan.add(createCard("Pengeluaran", lblTotalPengeluaran, new Color(192, 41, 43)));
+        panelRingkasan.add(panelLabelRingkasan, BorderLayout.SOUTH);
+        add(panelRingkasan, BorderLayout.CENTER);
+
+        // --- Panel Tombol (Bawah) ---
+        JPanel panelTombol = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 20));
+        panelTombol.setBackground(Color.WHITE);
+
+        btnTambahTransaksi = new JButton("✚ Tambah Transaksi");
+        btnTambahTransaksi.setBackground(new Color(41, 128, 185));
+        btnTambahTransaksi.setForeground(Color.WHITE);
+        btnTambahTransaksi.putClientProperty("JButton.buttonType", "roundRect");
+        btnTambahTransaksi.setFont(new Font("Dialog", Font.BOLD, 13));
+        btnTambahTransaksi.setFocusPainted(false);
+        btnTambahTransaksi.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Buka halaman tambah transaksi
+                SwingUtilities.invokeLater(() -> {
+                    AplikasiKeuangan app = new AplikasiKeuangan();
+                    app.setVisible(true);
+                    setVisible(false); // Sembunyikan dashboard
+                });
+            }
+        });
+        panelTombol.add(btnTambahTransaksi);
+
+        JButton btnRefresh = new JButton("⟲ Refresh");
+        btnRefresh.setBackground(new java.awt.Color(142, 68, 173));
+        btnRefresh.setForeground(java.awt.Color.WHITE);
+        btnRefresh.putClientProperty("JButton.buttonType", "roundRect");
+        btnRefresh.setFont(new Font("Dialog", Font.BOLD, 13));
+        btnRefresh.setFocusPainted(false);
+        btnRefresh.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Refresh data real-time
+                updateRingkasan();
+            }
+        });
+        panelTombol.add(btnRefresh);
+
+        btnLihatUsers = new JButton("👤 Lihat Pengguna");
+        btnLihatUsers.setBackground(new java.awt.Color(52, 152, 219));
+        btnLihatUsers.setForeground(java.awt.Color.WHITE);
+        btnLihatUsers.putClientProperty("JButton.buttonType", "roundRect");
+        btnLihatUsers.setFont(new Font("Dialog", Font.BOLD, 13));
+        btnLihatUsers.setFocusPainted(false);
+        btnLihatUsers.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showUsers();
+            }
+        });
+        panelTombol.add(btnLihatUsers);
+
+        JButton btnReset = new JButton("🗘 Reset Saldo");
+        btnReset.setBackground(new java.awt.Color(231, 76, 60));
+        btnReset.setForeground(java.awt.Color.WHITE);
+        btnReset.putClientProperty("JButton.buttonType", "roundRect");
+        btnReset.setFont(new Font("Dialog", Font.BOLD, 13));
+        btnReset.setFocusPainted(false);
+        btnReset.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                resetSaldo();
+            }
+        });
+        panelTombol.add(btnReset);
+
+        btnLihatRiwayat = new JButton("🔎 Lihat Riwayat");
+        btnLihatRiwayat.setBackground(new java.awt.Color(93, 173, 226));
+        btnLihatRiwayat.setForeground(java.awt.Color.WHITE);
+        btnLihatRiwayat.putClientProperty("JButton.buttonType", "roundRect");
+        btnLihatRiwayat.setFont(new Font("Dialog", Font.BOLD, 13));
+        btnLihatRiwayat.setFocusPainted(false);
+        btnLihatRiwayat.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showRiwayat();
+            }
+        });
+        panelTombol.add(btnLihatRiwayat);
+
+        btnLogout = new JButton("↪ Logout");
+        btnLogout.setBackground(new Color(192, 57, 43));
+        btnLogout.setForeground(Color.WHITE);
+        btnLogout.setFont(new Font("Dialog", Font.BOLD, 13));
+        btnLogout.putClientProperty("JButton.buttonType", "roundRect");
+        btnLogout.setFocusPainted(false);
+        btnLogout.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Logout dan kembali ke login
+                int confirm = JOptionPane.showConfirmDialog(DashboardFrame.this, "Apakah Anda yakin ingin logout?",
+                        "Konfirmasi Logout", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    dispose();
+                    SwingUtilities.invokeLater(() -> {
+                        LoginFrame login = new LoginFrame();
+                        login.setVisible(true);
+                    });
+                }
+            }
+        });
+        panelTombol.add(btnLogout);
+
+        add(panelTombol, BorderLayout.SOUTH);
+
+        // Update ringkasan (simulasi)
+        updateRingkasan();
+    }
+
+    private void showUsers() {
+        SwingUtilities.invokeLater(() -> {
+            UsersFrame usersFrame = new UsersFrame();
+            usersFrame.setLocationRelativeTo(this);
+            usersFrame.setVisible(true);
+        });
+    }
+
+    private void showRiwayat() {
+        SwingUtilities.invokeLater(() -> {
+            RiwayatFrame riwayat = new RiwayatFrame();
+            riwayat.setLocationRelativeTo(this);
+            riwayat.setVisible(true);
+        });
+    }
+
+    private void updateRingkasan() {
+        Database.Totals totals = Database.getTotals();
+        lblTotalSaldo.setText("Total Saldo: " + formatRupiah(totals.totalSaldo));
+        lblTotalPemasukan.setText("Total Pemasukan: " + formatRupiah(totals.totalPemasukan));
+        lblTotalPengeluaran.setText("Total Pengeluaran: " + formatRupiah(totals.totalPengeluaran));
+
+        java.util.List<Database.Transaction> transactions = Database.getTransactions();
+        chartPanel.setSegments(buildChartSegments(transactions));
+    }
+
+    private java.util.List<PieChartPanel.Segment> buildChartSegments(java.util.List<Database.Transaction> transactions) {
+        Map<String, Long> totalsByCategory = new LinkedHashMap<>();
+        for (Database.Transaction tx : transactions) {
+            String label = tx.description.trim();
+            if (label.isEmpty()) {
+                label = tx.type;
+            }
+            totalsByCategory.put(label, totalsByCategory.getOrDefault(label, 0L) + Math.abs(tx.amount));
+        }
+
+        java.util.List<PieChartPanel.Segment> segments = new ArrayList<>();
+        for (Map.Entry<String, Long> entry : totalsByCategory.entrySet()) {
+            segments.add(new PieChartPanel.Segment(entry.getKey(), entry.getValue(), getCategoryColor(entry.getKey())));
+        }
+        return segments;
+    }
+
+    private Color getCategoryColor(String category) {
+        String lower = category.toLowerCase();
+        if (lower.contains("belanja") || lower.contains("shopping") || lower.contains("grocery") || lower.contains("makan")) {
+            return new Color(231, 76, 60); // merah
+        }
+        if (lower.contains("tagihan") || lower.contains("bill") || lower.contains("listrik") || lower.contains("air") || lower.contains("internet")) {
+            return new Color(241, 196, 15); // kuning
+        }
+        if (lower.contains("transport") || lower.contains("tol") || lower.contains("bus") || lower.contains("grab") || lower.contains("ojek")) {
+            return new Color(52, 152, 219); // biru
+        }
+        if (lower.contains("gaji") || lower.contains("income") || lower.contains("pendapatan")) {
+            return new Color(46, 204, 113); // hijau
+        }
+        if (lower.contains("utang") || lower.contains("hutang") || lower.contains("pinjaman")) {
+            return new Color(155, 89, 182); // ungu
+        }
+        return new Color(52, 73, 94); // default
+    }
+
+    private void resetSaldo() {
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Apakah Anda yakin ingin mereset semua data transaksi? Tindakan ini tidak dapat dibatalkan.",
+                "Konfirmasi Reset", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            if (Database.resetTransactions()) {
+                updateRingkasan();
+                JOptionPane.showMessageDialog(this, "Saldo berhasil direset!", "Reset Berhasil",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Error saat mereset data!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private String formatRupiah(long nominal) {
+        return "Rp " + String.format("%,d", nominal).replace(",", ".");
+    }
+
+    private JPanel createCard(String title, JLabel valueLabel, Color color) {
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220), 1, true),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        
+        JLabel lblTitle = new JLabel(title);
+        lblTitle.setFont(new Font("Arial", Font.PLAIN, 12));
+        lblTitle.setForeground(Color.GRAY);
+        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        valueLabel.setForeground(color);
+        valueLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        card.add(lblTitle, BorderLayout.NORTH);
+        card.add(valueLabel, BorderLayout.CENTER);
+        return card;
+    }
+
+    private class PieChartPanel extends JPanel {
+        private java.util.List<Segment> segments = new ArrayList<>();
+
+        public PieChartPanel() {
+            setBackground(Color.WHITE);
+        }
+
+        public void setSegments(java.util.List<Segment> segments) {
+            this.segments = segments;
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int size = Math.min(getWidth(), getHeight() - 100) - 40;
+            int x = (getWidth() - size) / 2;
+            int y = 20;
+
+            long total = 0;
+            for (Segment s : segments) {
+                total += s.value;
+            }
+
+            if (total <= 0) {
+                g2.setColor(Color.LIGHT_GRAY);
+                g2.fillOval(x, y, size, size);
+                g2.setColor(Color.DARK_GRAY);
+                g2.setFont(new Font("Arial", Font.PLAIN, 14));
+                FontMetrics fm = g2.getFontMetrics();
+                String text = "Belum ada data transaksi";
+                int textWidth = fm.stringWidth(text);
+                g2.drawString(text, x + (size - textWidth) / 2, y + size / 2 + fm.getAscent() / 2);
+                return;
+            }
+
+           int startAngle = 0;
+            for (Segment s : segments) {
+            int angle = (int) Math.round((double) s.value / total * 360);
+            g2.setColor(s.color);
+            g2.fillArc(x, y, size, size, startAngle, angle);
+            startAngle += angle;
+            }
+
+            int inset = size / 3;
+            g2.setColor(Color.WHITE);
+            g2.fillOval(x + inset, y + inset, size - inset * 2, size - inset * 2);
+    
+            g2.setColor(new Color(230, 230, 230)); // Border halus
+            g2.drawOval(x + inset, y + inset, size - inset * 2, size - inset * 2);
+
+            int dotSize = 12; // Ukuran titik
+            int legendY = y + size + 20; // Posisi di bawah diagram
+
+            for (int i = 0; i < segments.size(); i++) {
+            Segment s = segments.get(i);
+            g2.setColor(s.color);
+            g2.fillOval(30, legendY + (i * 25), dotSize, dotSize); 
+            g2.setColor(new Color(44, 62, 80));
+            g2.setFont(new Font("SansSerif", Font.PLAIN, 12));
+            g2.drawString(s.label + " - " + formatRupiah(s.value), 50, legendY + (i * 25) + 10);
+            }
+        }
+
+        private static class Segment {
+            public final String label;
+            public final long value;
+            public final Color color;
+
+            public Segment(String label, long value, Color color) {
+                this.label = label;
+                this.value = value;
+                this.color = color;
+            }
+        }
+    }
+}
